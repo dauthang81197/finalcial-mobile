@@ -1,27 +1,33 @@
 import { apiWithAuth } from "@/api/client";
+import IModal from "@/app/modal";
 import { getDateRanges, getRandomColor } from "@/common/utils";
+import ISelect from "@/components/select";
 import { Colors } from "@/constants/theme";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCategory } from "@/store/useCategory";
 import { useDashboard } from "@/store/useDashboard";
 import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 
-export default function HomeScreen() {
+export default function TransactionScreen() {
   const { user } = useAuthStore();
   const { daily, weekly, monthly } = getDateRanges();
   const { summary, setSummary } = useDashboard();
   const { categories, setCategories } = useCategory();
-  const [active, setActive] = useState("Monthly");
+  const [date, setDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [category, setCategory] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -35,45 +41,27 @@ export default function HomeScreen() {
     };
 
     fetchData();
-    handleToggle("Monthly");
   }, [setSummary, monthly.startDate, monthly.endDate]);
 
-  const handleToggle = useCallback(
-    async (period: string) => {
-      setLoading(true);
-      setActive(period);
-      let startD, endD;
-      if (period === "Daily") {
-        startD = daily.startDate;
-        endD = daily.endDate;
-      } else if (period === "Weekly") {
-        startD = weekly.startDate;
-        endD = weekly.endDate;
-      } else {
-        startD = monthly.startDate;
-        endD = monthly.endDate;
-      }
-      try {
-        const res = await apiWithAuth.get("transaction/categories", {
-          params: { startDate: startD, endDate: endD },
-        });
-        setCategories(res.data);
-        setLoading(false);
-      } catch (error) {
-        console.log(error);
-        setLoading(false);
-      }
-    },
-    [
-      daily.endDate,
-      daily.startDate,
-      monthly.endDate,
-      monthly.startDate,
-      setCategories,
-      weekly.endDate,
-      weekly.startDate,
-    ]
-  );
+  const formatDate = (d: Date) => {
+    return d.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const handlePrev = () => {
+    const newDate = new Date(date);
+    newDate.setDate(newDate.getDate() - 1);
+    setDate(newDate);
+  };
+
+  const handleNext = () => {
+    const newDate = new Date(date);
+    newDate.setDate(newDate.getDate() + 1);
+    setDate(newDate);
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -126,20 +114,33 @@ export default function HomeScreen() {
       {/* Transactions List */}
       <View style={styles.listSection}>
         <View>
-          <View style={styles.toggleWrapper}>
-            {["Daily", "Weekly", "Monthly"].map((item) => (
-              <TouchableOpacity key={item} onPress={() => handleToggle(item)}>
-                <Text
-                  style={[
-                    styles.toggleItem,
-                    active === item && styles.activeToggle,
-                  ]}
-                >
-                  {item}
-                </Text>
+          <View style={styles.containerCalendar}>
+            <View style={styles.containerSubCalendar}>
+              <TouchableOpacity onPress={handlePrev}>
+                <Ionicons
+                  name="chevron-back"
+                  size={28}
+                  color={Colors.text.colorBlack}
+                />
               </TouchableOpacity>
-            ))}
+
+              <Text style={styles.textCalendar}>{formatDate(date)}</Text>
+
+              <TouchableOpacity onPress={handleNext}>
+                <Ionicons
+                  name="chevron-forward"
+                  size={28}
+                  color={Colors.text.colorBlack}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.containerSubCalendar}>
+              <TouchableOpacity onPress={() => setIsOpenModal(true)}>
+                <Text style={styles.addButton}>Add Transaction</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
           <View style={styles.listWrapper}>
             {loading === false ? (
               categories?.map((item) => (
@@ -168,6 +169,70 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
+      <IModal
+        modalVisible={isOpenModal}
+        onRequestClose={() => setIsOpenModal(false)}
+        content={
+          <View style={styles.formModal}>
+            <Text>Add Transaction</Text>
+            <View style={styles.itemInput}>
+              <Text>Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor="#b0b0b0"
+                // onChange={(e) => setEmail(e.nativeEvent.text)}
+              />
+            </View>
+            <View style={styles.itemInput}>
+              <Text>Category</Text>
+              <ISelect
+                options={[{ label: "test", value: "test" }]}
+                selectedValue={category}
+                onValueChange={(value) => setCategories(value)}
+              />
+            </View>
+            <View style={styles.itemInput}>
+              <Text>Amount</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor="#b0b0b0"
+                // onChange={(e) => setEmail(e.nativeEvent.text)}
+              />
+            </View>
+            <View style={styles.itemInput}>
+              <Text>Date</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                placeholderTextColor="#b0b0b0"
+                // onChange={(e) => setEmail(e.nativeEvent.text)}
+              />
+            </View>
+            <View style={styles.footerModal}>
+              <TouchableOpacity
+                style={[
+                  styles.footerButton,
+                  { backgroundColor: Colors.primary },
+                ]}
+                onPress={() => setIsOpenModal(false)}
+              >
+                <Text style={styles.footerButtonSave}>Save </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.footerButton,
+                  { backgroundColor: Colors.button.bgRed },
+                ]}
+                onPress={() => setIsOpenModal(false)}
+              >
+                <Text style={styles.footerButtonClose}>Close </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        }
+      />
     </ScrollView>
   );
 }
@@ -248,7 +313,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 35,
     borderTopRightRadius: 35,
     padding: 20,
-    minHeight: "100%",
+    height: "100%",
   },
   transactionRow: {
     flexDirection: "row",
@@ -313,5 +378,69 @@ const styles = StyleSheet.create({
   amount: {
     fontWeight: "bold",
     color: "#007BFF",
+  },
+  containerCalendar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  containerSubCalendar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    gap: 20,
+    marginBottom: 20,
+  },
+  textCalendar: {
+    fontSize: 18,
+    color: Colors.text.colorBlack,
+    fontWeight: "600",
+  },
+  addButton: {
+    backgroundColor: Colors.primary,
+    padding: 16,
+    borderRadius: 30,
+    alignItems: "center",
+  },
+  input: {
+    padding: 14,
+    borderRadius: 15,
+    fontSize: 15,
+    backgroundColor: Colors.input.background,
+  },
+  itemInput: {
+    flex: 1,
+    gap: 5,
+  },
+  formModal: {
+    height: 500,
+  },
+  footerModal: {
+    flexDirection: "row",
+    marginTop: 10,
+  },
+  footerButtonSave: {
+    backgroundColor: Colors.primary,
+    padding: 16,
+    borderRadius: 30,
+  },
+  footerButtonClose: {
+    backgroundColor: Colors.button.bgRed,
+    padding: 16,
+    borderRadius: 30,
+  },
+  footerButton: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 4,
+    borderRadius: 30,
+    marginHorizontal: 5,
+  },
+  footerButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
