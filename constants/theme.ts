@@ -35,6 +35,9 @@ export const Colors = {
     colorBlack: "#000",
     colorWhite: "#fff",
   },
+  button: {
+    bgRed: "#f00",
+  },
 };
 
 export const Fonts = Platform.select({

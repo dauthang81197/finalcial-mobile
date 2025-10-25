@@ -1,37 +1,63 @@
-import { Tabs } from "expo-router";
-import React from "react";
-
-import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+// app/(tabs)/_layout.tsx
 import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { View } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarStyle: {
+          height: 60,
+          backgroundColor: Colors.background,
+          alignItems: "center",
+          flexDirection: "row",
+        },
+        tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="home/index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 25,
+                borderWidth: focused ? 5 : 0,
+                borderColor: Colors.primary,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons name="home" size={24} color={Colors.text.colorBlack} />
+            </View>
           ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="transaction/index"
         options={{
-          title: "Explore",
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 25,
+                borderWidth: focused ? 5 : 0,
+                borderColor: Colors.primary,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Ionicons
+                name="wallet"
+                size={24}
+                color={Colors.text.colorBlack}
+              />
+            </View>
           ),
         }}
       />

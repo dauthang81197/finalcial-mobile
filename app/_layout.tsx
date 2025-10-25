@@ -1,9 +1,10 @@
+import { useAuthStore } from "@/store/useAuthStore";
 import { Slot, useRouter } from "expo-router";
 import { useEffect } from "react";
 
 export default function RootLayout() {
   const router = useRouter();
-  const token = null; // logic lấy token
+  const { token } = useAuthStore();
 
   useEffect(() => {
     if (!token) {
